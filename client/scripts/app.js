@@ -6,7 +6,7 @@
 // } )
 var url = 'http://parse.hrm8.hackreactor.com/chatterbox/classes/messages';
 var app = {};
-app.init = () =>  {
+app.init = () => {
 
 };
 
