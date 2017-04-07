@@ -4,7 +4,7 @@
 //  console.log("data",data);
 //  $('chats').html(data);
 // } )
-var url = 'http://parse.hrm8.hackreactor.com/chatterbox/classes/messages';
+var url = 'http://parse.hrm8.hackreactor.com';
 var app = {};
 app.init = () => {
 
@@ -15,14 +15,39 @@ app.send = (data) => {
     type: 'POST',
     url: url,
     data: JSON.stringify(data),
-    success: () => { console.log('chatterbox: Message sent'); },
     contentType: 'application/json',
+    success: () => { console.log('chatterbox: Message sent'); },
     error: () => { console.log('chatterbox: Message was not sent'); }
   });
 };
 
-app.fetch = () => {
+app.fetch = (data) => {
+  $.ajax({
+    type: 'GET',
+    // url: url,
+    data: data,
+    contentType: 'application/json',
+    success: (data) => { 
+      console.log('chatterbox: Message fetched'); 
+      data = JSON.parse(data);
+      $('#chat').append(data);
+    },
+    error: (err) => { console.log('chatterbox: Message was not fetched',err); }
+  });
+};
 
+app.clearMessages = () => {
+  $('#chats').empty();
+};
+
+app.renderMessage = (message) => {
+  var htmlMessage = `<div class='message'>${JSON.stringify(message)}</div>`;
+  $('#chats').append( htmlMessage);
+};
+
+app.renderRoom = (roomName) => {
+  var htmlRoom = `<div id='#${roomName}'></div>`;
+  $('#roomSelect').append(htmlRoom);
 };
 
 
