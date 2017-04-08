@@ -15,7 +15,7 @@ $(document).ready(function() {
 
   App.prototype.init = function() {
     console.log("Initializing App...");
-    this.fetch();
+    // this.fetch();
   };
 
   App.prototype.send = function(data) {
@@ -70,7 +70,7 @@ $(document).ready(function() {
   App.prototype.renderMessage = function(message) {
     var htmlMessage = `
   <div class='message'>
-    <a class="username" onclick="App.prototype.handleUsernameClick('${message.username}')">
+    <a class="username" onclick="app.handleUsernameClick('${message.username}')">
       ${message.username}
     </a>
     <p class="messageText">
@@ -92,12 +92,24 @@ $(document).ready(function() {
     this.friends.push(userName);
   };
 
+  $('.submit').on('click', function(event){
+
+    App.prototype.handleSubmit();
+
+  });
+
   App.prototype.handleSubmit = function() {
+
+    console.log("Calling handleSubmit!");
+
+
+
     var message = {
-      text: $('#composetext').val()
+      text: $('#message').val()
     };
     console.log(message);
     this.send(message);
+
   };
 
   // $('#send').on('click', function(event) {
@@ -122,7 +134,7 @@ $(document).ready(function() {
   // });
 
   app = new App();
-  app.init();
+  // app.init();
   console.log(app);
 
 });
