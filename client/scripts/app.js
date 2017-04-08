@@ -1,68 +1,128 @@
-// YOUR CODE HERE:
-
-// $.get('http://parse.hrm8.hackreactor.com/chatterbox/classes/messages', function ( data ) {
-//  console.log("data",data);
-//  $('chats').html(data);
-// } )
-var url = 'http://parse.hrm8.hackreactor.com';
-var app = {};
-app.init = () => {
-
-};
-
-app.send = (data) => {
-  $.ajax({
-    type: 'POST',
-    url: url,
-    data: JSON.stringify(data),
-    contentType: 'application/json',
-    success: () => { console.log('chatterbox: Message sent'); },
-    error: () => { console.log('chatterbox: Message was not sent'); }
-  });
-};
-
-app.fetch = (data) => {
-  $.ajax({
-    type: 'GET',
-    // url: url,
-    data: data,
-    contentType: 'application/json',
-    success: (data) => { 
-      console.log('chatterbox: Message fetched'); 
-      data = JSON.parse(data);
-      $('#chat').append(data);
-    },
-    error: (err) => { console.log('chatterbox: Message was not fetched',err); }
-  });
-};
-
-app.clearMessages = () => {
-  $('#chats').empty();
-};
-
-app.renderMessage = (message) => {
-  var htmlMessage = `<div class='message'>${JSON.stringify(message)}</div>`;
-  $('#chats').append( htmlMessage);
-};
-
-app.renderRoom = (roomName) => {
-  var htmlRoom = `<div id='#${roomName}'></div>`;
-  $('#roomSelect').append(htmlRoom);
-};
+$(document).ready(function() {
 
 
-// Post to chatterbox
-// $.ajax({
-//   // This is the url you should use to communicate with the parse API server.
-//   url: 'http://parse.CAMPUS.hackreactor.com/chatterbox/classes/messages',
-//   type: 'POST',
-//   data: JSON.stringify(message),
-//   contentType: 'application/json',
-//   success: function (data) {
-//     console.log('chatterbox: Message sent');
-//   },
-//   error: function (data) {
-//     // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-//     console.error('chatterbox: Failed to send message', data);
-//   }
-// });
+
+  // $.get('http://parse.hrm8.hackreactor.com/chatterbox/classes/messages', function ( data ) {
+  //  console.log("data",data);
+  //  $('chats').html(data);
+  // } )
+  // var url = 'http://parse.hrm8.hackreactor.com/';
+
+  var App = function() {
+    this.friends = [];
+    this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
+  };
+
+  App.prototype.init = function() {
+    console.log("Initializing App...");
+    this.fetch();
+  };
+
+  App.prototype.send = function(data) {
+    $.ajax({
+      type: 'POST',
+      url: this.server,
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: function() {
+        console.log('chatterbox: Message sent');
+      },
+      error: function() {
+        console.log('chatterbox: Message was not sent');
+      }
+    });
+  };
+
+  App.prototype.fetch = function() {
+
+    console.log("calling fetch!", this.server);
+
+    $.ajax({
+      type: 'GET',
+      url: this.server,
+      contentType: 'application/json',
+
+      success: function(data) {
+        console.log('chatterbox: Message fetched', data);
+        // data = JSON.parse(data);
+        data.results.forEach(function(message) {
+          console.log("message:", message);
+          App.prototype.renderMessage(message);
+        });
+      },
+
+      error: function(err) {
+        console.log('chatterbox: Message was not fetched', err);
+      }
+
+    });
+
+    // $.get( App.prototype.server, function(data){
+    //   
+    // })
+  };
+
+  App.prototype.clearMessages = function() {
+
+    $('#chats').empty();
+  };
+
+  App.prototype.renderMessage = function(message) {
+    var htmlMessage = `
+  <div class='message'>
+    <a class="username" onclick="App.prototype.handleUsernameClick('${message.username}')">
+      ${message.username}
+    </a>
+    <p class="messageText">
+      ${message.text}
+    </p>
+    <p class="messageRoomName">
+      ${message.roomname}
+    </p>
+  </div>`;
+    $('#chats').append(htmlMessage);
+  };
+
+  App.prototype.renderRoom = function(roomName) {
+    var htmlRoom = `<div id='#${roomName}'></div>`;
+    $('#roomSelect').append(htmlRoom);
+  };
+
+  App.prototype.handleUsernameClick = function(userName) {
+    this.friends.push(userName);
+  };
+
+  App.prototype.handleSubmit = function() {
+    var message = {
+      text: $('#composetext').val()
+    };
+    console.log(message);
+    this.send(message);
+  };
+
+  // $('#send').on('click', function(event) {
+
+  // });
+
+
+  // Post to chatterbox
+  // $.ajax({
+  //   // This is the url you should use to communicate with the parse API server.
+  //   url: 'http://parse.CAMPUS.hackreactor.com/chatterbox/classes/messages',
+  //   type: 'POST',
+  //   data: JSON.stringify(message),
+  //   contentType: 'application/json',
+  //   success: function (data) {
+  //     console.log('chatterbox: Message sent');
+  //   },
+  //   error: function (data) {
+  //     // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+  //     console.error('chatterbox: Failed to send message', data);
+  //   }
+  // });
+
+  app = new App();
+  app.init();
+  console.log(app);
+
+});

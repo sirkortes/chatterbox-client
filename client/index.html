@@ -29,5 +29,15 @@
       <div id="roomSelect"></div>
     </div>
     <div id="chats"></div>
+    <div id="compose">
+    <!-- <form id="send" action="app.handleSubmit()"> -->
+      <input id="message" height="40" type="text"/>
+      <br>
+      <input id="send" class="submit" type="submit" onclick="app.handleSubmit()"/>
+    <!-- </form> -->
+    </div>
   </body>
 </html>
+
+
+<!-- curl -H "Content-Type: application/json" -X POST -d '{"text":"Hello"}' http://parse.hrm8.hackreactor.com/chatterbox/classes/messages -->
