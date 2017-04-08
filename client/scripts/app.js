@@ -15,13 +15,14 @@ $(document).ready(function() {
 
   App.prototype.init = function() {
     console.log("Initializing App...");
-    // this.fetch();
+    this.fetch();
   };
 
   App.prototype.send = function(data) {
     $.ajax({
       type: 'POST',
-      url: this.server,
+      url:  'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages',
+      crossServer: true,
       data: JSON.stringify(data),
       contentType: 'application/json',
       success: function() {
@@ -34,8 +35,6 @@ $(document).ready(function() {
   };
 
   App.prototype.fetch = function() {
-
-    console.log("calling fetch!", this.server);
 
     $.ajax({
       type: 'GET',
@@ -69,17 +68,17 @@ $(document).ready(function() {
 
   App.prototype.renderMessage = function(message) {
     var htmlMessage = `
-  <div class='message'>
-    <a class="username" onclick="app.handleUsernameClick('${message.username}')">
-      ${message.username}
-    </a>
-    <p class="messageText">
-      ${message.text}
-    </p>
-    <p class="messageRoomName">
-      ${message.roomname}
-    </p>
-  </div>`;
+    <div class='message'>
+      <a class="username" onclick="app.handleUsernameClick('${message.username}')">
+        ${message.username}
+      </a>
+      <p class="messageText">
+        ${message.text}
+      </p>
+      <p class="messageRoomName">
+        ${message.roomname}
+      </p>
+    </div>`;
     $('#chats').append(htmlMessage);
   };
 
@@ -89,6 +88,7 @@ $(document).ready(function() {
   };
 
   App.prototype.handleUsernameClick = function(userName) {
+
     this.friends.push(userName);
   };
 
@@ -99,17 +99,11 @@ $(document).ready(function() {
   });
 
   App.prototype.handleSubmit = function() {
-
-    console.log("Calling handleSubmit!");
-
-
-
     var message = {
       text: $('#message').val()
     };
     console.log(message);
-    this.send(message);
-
+    App.prototype.send(message);
   };
 
   // $('#send').on('click', function(event) {
@@ -134,7 +128,7 @@ $(document).ready(function() {
   // });
 
   app = new App();
-  // app.init();
+  app.init();
   console.log(app);
 
 });
