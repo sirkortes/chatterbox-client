@@ -27,12 +27,21 @@
 
 <body>
   <div id="main" ">
-    <h1>chatterbox</h1>
-    <div id="roomSelect">
-      <select id="roomSelectInput">
-        </select>
+    <div id="mainTop">
+      <h1 id="chatroomTitle">chatterbox</h1>
+      <h4 id="chatroomServer">lobby</h4>
     </div>
-    <input id="addNewRoom" height="40" type="text"/>
+    <div style="clear: both;"></div>
+    <div id="mainBottom">
+      <!-- <div id="roomSelect"> -->
+        <select id="roomSelect">
+          <option value="lobby" selected="selected">lobby</option>
+        </select>
+      <!-- </div> -->
+      <input id="addNewRoom" height="40" type="text"/>
+      <button id="addRoom" type="button">Add Room</button>
+
+    </div>
   </div>
   <div id="chats"></div>
   <div id="compose">

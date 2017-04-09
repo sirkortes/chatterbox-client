@@ -2,11 +2,11 @@ $(document).ready(function() {
 // http://parse.sfm8.hackreactor.com/chatterbox/classes/messages
   var App = function() {
     this.friends = [];
-    this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/' + this.room;
-    this.rooms = [];
+    this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
+    this.rooms = ['lobby'];
     this.messages = [];
     this.renderIndex = 0;
-    this.room = "";
+    this.room;
   };
 
   App.prototype.init = function() {
@@ -19,6 +19,7 @@ $(document).ready(function() {
     $('body').on('click', '.username', this.handleUsernameClick);
     $('.submit').on('click submit', this.handleSubmit);
 
+    // adding rooms
     $('#addNewRoom').on('keyup',function(e){
 
       var code = (e.keyCode ? e.keyCode : e.which);
@@ -26,9 +27,20 @@ $(document).ready(function() {
         var room = $("#addNewRoom").val();
         $("#addNewRoom").val('');
         app.renderRoom(room);
+        $('#roomSelect').val(room);
+        app.room = room;
+        app.currentServer = app.server + app.room;
       }
+    });
 
-    })
+    // changing rooms
+    $("#roomSelect").on('change', function(e){
+      var room = $("#roomSelect :selected").val();
+      // app.currentServer = app.server + app.room;
+      app.room = room;
+      app.renderRoom(room);
+    });
+
       // create compose
       var $compose_field = $('<div id="composing" class="placeholder" contenteditable="true" role="textbox"></div>');
       $compose_field.appendTo($('#compose'));
@@ -37,6 +49,10 @@ $(document).ready(function() {
       // make compose send on return key
       var code = (e.keyCode ? e.keyCode : e.which);
       if (code == 13) { $('.submit').click(); }
+      
+      // set default header
+      // this.room = $("#roomSelect :selected").val();
+      // $('#chatroomServer').html( this.room );
 
   });
 
@@ -49,11 +65,12 @@ $(document).ready(function() {
   };
 
   App.prototype.send = function(data) {
+
     var app = this;
     // console.log("this",this.server)
     $.ajax({
       type: 'POST',
-      url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/'+ app.room,
+      url: 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages',
       // crossServer: true,
       data: JSON.stringify(data),
       contentType: 'application/json',
@@ -64,37 +81,54 @@ $(document).ready(function() {
         console.log('chatterbox: Message was not sent');
       }
     });
+    console.log("sent")
   };
 
   App.prototype.getFeed = function(messages) {
     messages.forEach(function(message) {
+      if (!app.rooms.includes(message.roomname)){
+        app.addRoom(message.roomname);
+      }
       app.renderMessage(message);
     });
+
+
   };
 
-  App.prototype.sanitize = function(s) {
-    if (s === ''){ return ' '};
-    if (s === undefined) {
-      return ' ';
+  App.prototype.sanitize = function(string) {
+
+    var entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
     };
 
-    return s.replace(/[^a-zA-Z0-9.-]/g, function(match) {
-      // return ' '+match[0].charCodeAt(0).toString(16)+' ';
-      return ' ';
+    return String(string).replace( /[&<>"'`=\/]/g, function(s) {
+      return entityMap[s];
     });
   };
 
   App.prototype.timeAgo = function(timed) {
 
-    var time = new Date(timed);
-    milliseconds = time.getTime();
+    milliseconds = new Date(timed).getTime();
     var now = new Date().getTime();
-    var elapsed = (now - milliseconds);
+    var elapsed = Math.abs(now - milliseconds);
+
     var secs = Math.ceil(elapsed / 1000);
     var mins = Math.floor(secs / 60);
     var hours = Math.floor(mins / 60);
     var days = Math.floor(hours / 24);
-    if (days > 0) {
+
+    // if ( elapsed < -1 ){
+    //   return elapsed;
+    // }
+    // else 
+      if (days > 0) {
       return days + "d";
     } else if (hours > 0) {
       return hours + "h";
@@ -105,7 +139,7 @@ $(document).ready(function() {
     }
   };
 
-  App.prototype.fetch = function() {
+  App.prototype.fetch = function(filter) {
 
     var app = this;
 
@@ -130,13 +164,30 @@ $(document).ready(function() {
           */
 
           if (data.results) {
-          // first time we get messages, we order them from oldest to newest ( message.createdat )
+            // first time we get messages, we order them from oldest to newest ( message.createdat )
             if ( app.messages.length === 0 ){
 
-                var messages = data.results.sort(function(a,b){ return b.createdAt - a.createdAt; });
-                // console.log("messages",messages);
-                app.messages = messages.slice(0,21);
-                app.getFeed(messages);
+                // sort messages
+                var messages = data.results.sort(function(a,b){ 
+                  return b.createdAt - a.createdAt; });
+
+                // filter messages
+                if ( filter ){
+                  messages = messages.filter(function(message){
+                    return message.roomname === app.roomname;
+                  });
+                }
+                
+                // slice messages - cap size
+                messages = messages.slice(0,30);
+
+                // save messages
+                app.messages = messages;
+
+                // render messages
+                app.messages.forEach(function(message){
+                  app.renderMessage(message);
+                });
 
             } else {
 
@@ -163,7 +214,9 @@ $(document).ready(function() {
 
                 // save room
                 if (!app.rooms.includes(message.roomname)){
-                  app.renderRoom(message.roomname);
+                  // app.renderRoom(message.roomname);
+                  // console.log(app.rooms, message.roomname)
+                  app.addRoom(message.roomname);
                 }
                 // render it
                 app.renderMessage(message);
@@ -173,17 +226,8 @@ $(document).ready(function() {
               // cap our messages at 100
               app.messages.slice(0,100);
             }
-          // keep record of this.renderIndex to know where in our messages we must start rendering from
-          // on each new fetch, push to our messages array ( to end, so theyll have a greater index )
-          // then prepend to our #chat, starting from our renderIndex to current meesages.length index
 
-
-
-            // context.getFeed(data.results);
-
-          } else {
-            console.log("No data results", data);
-          }
+          } else { console.log("No data results", data); }
 
           // console.log(context.messages.length,"got messages");
 
@@ -239,11 +283,24 @@ $(document).ready(function() {
     this.renderIndex++;
   };
 
+  App.prototype.addRoom = function(room){
+    app.rooms.push(room);
+    var htmlRoom = `<option value="${room}">${room}</option>`;
+    $('#roomSelect').append(htmlRoom);
+  }
+
   App.prototype.renderRoom = function(roomName) {
 
-    app.rooms.push(roomName);
-    var htmlRoom = `<option value="${roomName}">${roomName}</option>`;
-    $('#roomSelectInput').append(htmlRoom);
+    // get our messages, filter by roomName
+
+    // clear room
+    this.clearMessages();
+    $("#chatroomServer").html(roomName)
+    // render messages filtered by roomname
+    this.getFeed( this.messages.filter(function(message){
+      return message.roomname === roomName;
+    }))
+    
   };
 
 
@@ -258,15 +315,14 @@ $(document).ready(function() {
   };
 
   App.prototype.handleSubmit = function() {
-    console.log("SUBMITTING");
 
     var composetext = $('#composing');
-    console.log("SUBMIT?",composetext);
 
     var message = {
       username: window.location.search.slice(10),
       text: composetext.text(),
-      roomname: $("#roomSelectInput").val()
+      roomname: $("#roomSelect").val(),
+      createdAt: new Date().getTime()
     };
 
     // erase textbox
